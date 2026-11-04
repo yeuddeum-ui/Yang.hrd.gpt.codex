@@ -45,33 +45,22 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
 }
 
 async function revealCardsOnScroll() {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const cards = [...document.querySelectorAll('.highlight-card, .day-card')];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try {
-    const { animate, inView } = await import('https://cdn.jsdelivr.net/npm/motion@12.23.24/+esm');
-    cards.forEach(card => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(48px)';
-    });
-    let batchIndex = 0;
-    let resetFrame;
-    inView(cards, card => {
-      const delay = batchIndex++ * 0.14;
-      cancelAnimationFrame(resetFrame);
-      resetFrame = requestAnimationFrame(() => { batchIndex = 0; });
-      animate(card, { opacity: [0, 1], y: [48, 0] }, {
-        duration: 0.8, delay, ease: [0.22, 1, 0.36, 1],
-        onComplete: () => {
-          card.style.removeProperty('opacity');
-          card.style.removeProperty('transform');
-        }
+    const { animate } = await import('https://cdn.jsdelivr.net/npm/motion@12.23.24/+esm');
+    const observer = new IntersectionObserver(entries => {
+      entries.filter(entry => entry.isIntersecting).forEach((entry, index) => {
+        const card = entry.target;
+        animate(card, {
+          opacity: [0, 1],
+          transform: ['translateY(70px)', 'translateY(0px)']
+        }, { duration: 1, delay: index * 0.2, ease: [0.22, 1, 0.36, 1] });
       });
-    }, { margin: '0px 0px -40px 0px', amount: 0.08 });
+    }, { threshold: 0.05, rootMargin: '0px 0px -24px 0px' });
+    cards.forEach(card => observer.observe(card));
   } catch (error) {
-    cards.forEach(card => {
-      card.style.removeProperty('opacity');
-      card.style.removeProperty('transform');
-    });
+    console.warn('Card animation unavailable:', error);
   }
 }
 revealCardsOnScroll();
