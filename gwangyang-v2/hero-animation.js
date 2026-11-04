@@ -43,3 +43,35 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     // Leave readable static text if the animation library is unavailable.
   }
 }
+
+async function revealCardsOnScroll() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cards = [...document.querySelectorAll('.highlight-card, .day-card')];
+  try {
+    const { animate, inView } = await import('https://cdn.jsdelivr.net/npm/motion@12.23.24/+esm');
+    cards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(48px)';
+    });
+    let batchIndex = 0;
+    let resetFrame;
+    inView(cards, card => {
+      const delay = batchIndex++ * 0.14;
+      cancelAnimationFrame(resetFrame);
+      resetFrame = requestAnimationFrame(() => { batchIndex = 0; });
+      animate(card, { opacity: [0, 1], y: [48, 0] }, {
+        duration: 0.8, delay, ease: [0.22, 1, 0.36, 1],
+        onComplete: () => {
+          card.style.removeProperty('opacity');
+          card.style.removeProperty('transform');
+        }
+      });
+    }, { margin: '0px 0px -40px 0px', amount: 0.08 });
+  } catch (error) {
+    cards.forEach(card => {
+      card.style.removeProperty('opacity');
+      card.style.removeProperty('transform');
+    });
+  }
+}
+revealCardsOnScroll();
