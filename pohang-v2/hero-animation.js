@@ -36,7 +36,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         ],
         delay: stagger(18, { start: 250 }),
         ease: 'inOutQuart',
-        onComplete: () => fragments.forEach(part => part.style.removeProperty('transform'))
+        loop: true,
+        loopDelay: 3500
       });
     }
   } catch (error) {
